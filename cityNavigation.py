@@ -56,6 +56,7 @@ def ucs(start, goal):
         for neighbor, dist in graph[city]:
             heapq.heappush(pq, (cost + dist, neighbor, path))
 
+
 def astar(start, goal):
     pq = [(heuristic[start], 0, start, [])]
     visited = set()
@@ -76,6 +77,7 @@ def astar(start, goal):
             new_g = g + dist
             new_f = new_g + heuristic[neighbor]
             heapq.heappush(pq, (new_f, new_g, neighbor, path))
+
 
 # ---------------- GUI ----------------
 
@@ -111,11 +113,13 @@ class RomaniaGUI:
         self.result_label = tk.Label(self.root, text="", font=("Arial", 12))
         self.result_label.pack()
 
-        self.canvas = tk.Canvas(self.root, width=800, height=500, bg="white")
+        self.canvas = tk.Canvas(self.root, width=850, height=550, bg="white")
         self.canvas.pack()
 
-    # -------- DRAW MAP (simple layout) --------
+    # ✅ FIXED draw_map
     def draw_map(self):
+        self.canvas.delete("all")
+
         self.positions = {
             "Arad": (100, 250), "Zerind": (100, 150), "Oradea": (150, 80),
             "Sibiu": (250, 200), "Timisoara": (100, 350), "Lugoj": (180, 380),
@@ -127,17 +131,29 @@ class RomaniaGUI:
             "Vaslui": (650, 200), "Iasi": (650, 120), "Neamt": (650, 60)
         }
 
-        # draw edges
+        drawn_edges = set()
+
+        # draw edges + cost
         for city in graph:
-            for neighbor, _ in graph[city]:
-                x1,y1 = self.positions[city]
-                x2,y2 = self.positions[neighbor]
-                self.canvas.create_line(x1,y1,x2,y2)
+            for neighbor, cost in graph[city]:
+                if (neighbor, city) in drawn_edges:
+                    continue
+
+                x1, y1 = self.positions[city]
+                x2, y2 = self.positions[neighbor]
+
+                self.canvas.create_line(x1, y1, x2, y2)
+
+                # cost label
+                mx, my = (x1 + x2)//2, (y1 + y2)//2
+                self.canvas.create_text(mx, my, text=str(cost), fill="blue", font=("Arial", 9, "bold"))
+
+                drawn_edges.add((city, neighbor))
 
         # draw nodes
-        for city, (x,y) in self.positions.items():
-            self.canvas.create_oval(x-15,y-15,x+15,y+15,fill="lightblue")
-            self.canvas.create_text(x,y,text=city,font=("Arial",8))
+        for city, (x, y) in self.positions.items():
+            self.canvas.create_oval(x-15, y-15, x+15, y+15, fill="lightblue")
+            self.canvas.create_text(x, y, text=city, font=("Arial", 8, "bold"))
 
     def run(self):
         start = self.start.get()
@@ -159,9 +175,10 @@ class RomaniaGUI:
         self.draw_map()
 
         for i in range(len(path)-1):
-            x1,y1 = self.positions[path[i]]
-            x2,y2 = self.positions[path[i+1]]
-            self.canvas.create_line(x1,y1,x2,y2,fill="red",width=3)
+            x1, y1 = self.positions[path[i]]
+            x2, y2 = self.positions[path[i+1]]
+            self.canvas.create_line(x1, y1, x2, y2, fill="red", width=3)
+
 
 # RUN
 root = tk.Tk()
